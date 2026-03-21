@@ -9,6 +9,7 @@
 
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::PoisonError;
 use std::task::{Context, Poll};
 
 /// Countdown Future: decrements count by 1 each time it's polled,
@@ -33,7 +34,14 @@ impl Future for CountDown {
     type Output = &'static str;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        todo!()
+        if self.count==0{
+            Poll::Ready("liftoff!")
+        } else {
+            let self_mut = self.get_mut();
+            self_mut.count -= 1;
+            cx.waker().wake_by_ref();
+            Poll::Pending
+        }
     }
 }
 
@@ -57,7 +65,14 @@ impl Future for YieldOnce {
     type Output = ();
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        todo!()
+        if self.yielded {
+            Poll::Ready(())
+        } else {
+            let self_mut = self.get_mut();
+            self_mut.yielded = true;
+            cx.waker().wake_by_ref();
+            Poll::Pending
+        }
     }
 }
 
